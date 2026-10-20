@@ -2,13 +2,14 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import joblib
-import os
+
 from pathlib import Path
 from tensorflow.keras.models import load_model
 
-# ==========================================
-# PAGE CONFIGURATION
-# ==========================================
+
+# ==================================================
+# 1. PAGE CONFIGURATION
+# ==================================================
 
 st.set_page_config(
     page_title="Student Performance AI",
@@ -17,9 +18,10 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# ==========================================
-# PROJECT FILE PATHS
-# ==========================================
+
+# ==================================================
+# 2. PROJECT FILE PATHS
+# ==================================================
 
 BASE_DIR = Path(__file__).resolve().parent
 
@@ -28,20 +30,38 @@ SCALER_PATH = BASE_DIR / "scaler.pkl"
 FEATURES_PATH = BASE_DIR / "features.pkl"
 
 
-# ==========================================
-# CUSTOM CSS AND ANIMATIONS
-# ==========================================
+# ==================================================
+# 3. CUSTOM CSS AND ANIMATIONS
+# ==================================================
 
 st.markdown("""
 <style>
 
 .stApp {
     background: linear-gradient(
-        135deg,
-        #e8f5e9 0%,
-        #f3e5f5 50%,
-        #e3f2fd 100%
+        -45deg,
+        #e0f2fe,
+        #ede9fe,
+        #fce7f3,
+        #dcfce7
     );
+
+    background-size: 400% 400%;
+    animation: gradientBG 15s ease infinite;
+}
+
+@keyframes gradientBG {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
 }
 
 header[data-testid="stHeader"] {
@@ -61,13 +81,16 @@ header[data-testid="stHeader"] {
         #7c3aed,
         #db2777
     );
+
     background-size: 200% 200%;
     animation: gradientMove 6s ease infinite;
+
     color: white;
-    padding: 38px 25px;
+    padding: 35px 25px;
     border-radius: 24px;
     text-align: center;
-    margin-bottom: 28px;
+    margin-bottom: 25px;
+
     box-shadow: 0 10px 30px rgba(67, 56, 202, 0.20);
 }
 
@@ -75,82 +98,114 @@ header[data-testid="stHeader"] {
     color: white;
     font-size: 42px;
     font-weight: 800;
-    margin-bottom: 10px;
 }
 
 .hero p {
     color: white;
-    font-size: 18px;
-    margin-bottom: 0;
+    font-size: 17px;
 }
 
 @keyframes gradientMove {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
+    0% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
 }
 
-.section-card {
-    background: rgba(255, 255, 255, 0.85);
-    padding: 22px;
-    border-radius: 18px;
-    border: 1px solid rgba(124, 58, 237, 0.12);
-    box-shadow: 0 5px 18px rgba(30, 41, 59, 0.06);
-    margin-bottom: 20px;
+.section-heading {
+    color: #312e81;
+    font-size: 28px;
+    font-weight: 800;
 }
 
-.result-card {
-    background: linear-gradient(135deg, #ffffff, #ede9fe);
-    padding: 28px;
+div[data-testid="stForm"] {
+    background: rgba(255, 255, 255, 0.88);
+    padding: 25px;
     border-radius: 20px;
-    text-align: center;
-    border: 2px solid #c4b5fd;
-    animation: appear 0.7s ease-out;
+    border: 1px solid #ddd6fe;
+    box-shadow: 0 8px 25px rgba(49, 46, 129, 0.10);
+    animation: fadeIn 1s ease;
 }
 
-@keyframes appear {
+@keyframes fadeIn {
     from {
         opacity: 0;
-        transform: translateY(18px);
+        transform: translateY(15px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
     }
 }
 
+div[data-testid="stFormSubmitButton"] button {
+    background: linear-gradient(90deg, #6366f1, #9333ea);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 12px;
+    font-size: 17px;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+div[data-testid="stFormSubmitButton"] button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(99, 102, 241, 0.35);
+    color: white;
+}
+
+.result-card {
+    background: rgba(255, 255, 255, 0.93);
+    padding: 25px;
+    border-radius: 20px;
+    text-align: center;
+    border: 1px solid #ddd6fe;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+    animation: popIn 0.7s ease;
+    margin-bottom: 15px;
+}
+
+@keyframes popIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.85);
+    }
+
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
 .result-number {
-    font-size: 48px;
+    font-size: 45px;
     font-weight: 800;
     color: #4338ca;
 }
 
 .result-label {
-    font-size: 19px;
+    font-size: 18px;
     font-weight: 600;
     color: #374151;
 }
 
-.tip-card {
-    background: rgba(255, 255, 255, 0.92);
-    padding: 17px;
-    border-radius: 14px;
+.suggestion-card {
+    background: rgba(255, 255, 255, 0.94);
+    padding: 18px;
+    border-radius: 15px;
     border-left: 5px solid #7c3aed;
     margin-bottom: 12px;
     color: #374151;
-}
-
-div.stButton > button {
-    width: 100%;
-    border-radius: 12px;
-    min-height: 48px;
-    font-weight: 700;
-    transition: all 0.25s ease;
-}
-
-div.stButton > button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 14px rgba(124, 58, 237, 0.20);
+    animation: fadeIn 0.7s ease;
 }
 
 .footer {
@@ -164,9 +219,9 @@ div.stButton > button:hover {
 """, unsafe_allow_html=True)
 
 
-# ==========================================
-# LOAD TRAINED MODEL AND PREPROCESSORS
-# ==========================================
+# ==================================================
+# 4. LOAD MODEL AND PREPROCESSING FILES
+# ==================================================
 
 @st.cache_resource
 def load_project_files():
@@ -178,18 +233,21 @@ def load_project_files():
     ]
 
     missing_files = [
-        str(path.name)
+        path.name
         for path in required_files
         if not path.is_file()
     ]
 
     if missing_files:
         raise FileNotFoundError(
-            "खालील files project folder मध्ये सापडल्या नाहीत: "
+            "Required files not found: "
             + ", ".join(missing_files)
         )
 
-    model = load_model(MODEL_PATH, compile=False)
+    model = load_model(
+        MODEL_PATH,
+        compile=False
+    )
 
     scaler = joblib.load(SCALER_PATH)
 
@@ -198,74 +256,89 @@ def load_project_files():
     return model, scaler, features
 
 
-# ==========================================
-# HEADER
-# ==========================================
+# ==================================================
+# 5. APPLICATION HEADER
+# ==================================================
 
 st.markdown("""
 <div class="hero">
+
     <h1>🎓 Student Performance AI</h1>
+
     <p>
         Multilayer Neural Network Based
         Student Performance Prediction
     </p>
+
     <p>
-        Predict Performance • Identify Learning Needs • Improve Results
+        Predict Performance | Identify Learning Needs |
+        Improve Academic Results
     </p>
+
 </div>
 """, unsafe_allow_html=True)
 
 
-# ==========================================
-# PROJECT INTRODUCTION
-# ==========================================
+# ==================================================
+# 6. PROJECT FEATURES
+# ==================================================
 
-intro1, intro2, intro3 = st.columns(3)
+feature_col1, feature_col2, feature_col3 = st.columns(3)
 
-with intro1:
-    st.info("🎯 **Grade Prediction**\n\nPredict the student's final grade.")
+with feature_col1:
+    st.info(
+        "**🎯 Grade Prediction**\n\n"
+        "Predict the student's final grade using a trained neural network."
+    )
 
-with intro2:
-    st.info("🔍 **Performance Analysis**\n\nIdentify areas that may need improvement.")
+with feature_col2:
+    st.info(
+        "**🔍 Performance Analysis**\n\n"
+        "Identify students who may need additional academic support."
+    )
 
-with intro3:
-    st.info("💡 **Smart Suggestions**\n\nGet suggestions based on student inputs.")
-
+with feature_col3:
+    st.info(
+        "**💡 Improvement Suggestions**\n\n"
+        "Get suggestions based on the student's information."
+    )
 
 st.divider()
 
 
-# ==========================================
-# LOAD MODEL
-# ==========================================
+# ==================================================
+# 7. LOAD TRAINED MODEL
+# ==================================================
 
 try:
+
     model, scaler, features = load_project_files()
 
 except Exception as error:
-    st.error(
-        "⚠️ Model load झाला नाही. खालील error तपासा."
+
+    st.error("Unable to load the trained model.")
+
+    st.write(
+        "Check that the model files are available in the "
+        "same GitHub repository folder as app.py."
     )
 
     st.code(str(error))
 
-    st.info(
-        "GitHub repository मध्ये app.py, student_model.keras, "
-        "scaler.pkl आणि features.pkl या files योग्य ठिकाणी आहेत "
-        "का ते तपासा."
-    )
-
     st.stop()
 
 
-# ==========================================
-# STUDENT INFORMATION FORM
-# ==========================================
+# ==================================================
+# 8. STUDENT INFORMATION FORM
+# ==================================================
 
-st.header("📝 Student Information")
+st.markdown(
+    '<div class="section-heading">📝 Student Information</div>',
+    unsafe_allow_html=True
+)
 
 st.write(
-    "विद्यार्थ्याची माहिती भरा आणि त्याच्या अंतिम गुणांचा अंदाज मिळवा."
+    "Enter the student's information to predict their final grade."
 )
 
 with st.form("student_information_form"):
@@ -274,7 +347,7 @@ with st.form("student_information_form"):
 
     with left_col:
 
-        st.subheader("👤 Personal & Study Details")
+        st.subheader("👤 Personal and Study Details")
 
         age = st.number_input(
             "🎂 Student Age",
@@ -343,29 +416,26 @@ with st.form("student_information_form"):
 
     submitted = st.form_submit_button(
         "🚀 Predict Student Performance",
-        type="primary",
         use_container_width=True
     )
 
 
-# ==========================================
-# PREDICTION AND PERFORMANCE ANALYSIS
-# ==========================================
+# ==================================================
+# 9. PREDICT STUDENT PERFORMANCE
+# ==================================================
 
 if submitted:
 
-    # All available input features
-    student_data = {
+    student_information = {
         "age": age,
-        "absences": absences,
         "studytime": studytime,
         "failures": failures,
+        "absences": absences,
         "G1": G1,
         "G2": G2
     }
 
-    # Convert feature metadata into an ordered list.
-    # This supports a list or a pandas Index saved in features.pkl.
+    # Read feature names in the same order used during training.
 
     if isinstance(features, dict):
         feature_names = list(features.keys())
@@ -374,76 +444,87 @@ if submitted:
         feature_names = list(features)
 
     else:
+
         st.error(
-            "features.pkl मधील feature format ओळखता आला नाही. "
-            "train_model.py मधील features save करण्याचा code तपासा."
+            "The saved feature information has an unsupported format."
         )
+
         st.stop()
 
-    # Ensure all model features are available.
     missing_inputs = [
-        feature for feature in feature_names
-        if feature not in student_data
+        name
+        for name in feature_names
+        if name not in student_information
     ]
 
     if missing_inputs:
+
         st.error(
-            "Model ला आवश्यक असलेले काही features form मध्ये नाहीत: "
+            "The model requires additional input features: "
             + ", ".join(missing_inputs)
         )
 
         st.info(
-            "तुझ्या train_model.py मध्ये वापरलेल्या features "
-            "आणि app.py मधील inputs समान असणे आवश्यक आहे."
+            "The features used in train_model.py must match "
+            "the inputs provided by app.py."
         )
 
         st.stop()
 
-    # Create input in exactly the same order as training.
-    input_df = pd.DataFrame(
-        [[student_data[feature] for feature in feature_names]],
+    input_data = pd.DataFrame(
+        [
+            [
+                student_information[name]
+                for name in feature_names
+            ]
+        ],
         columns=feature_names
     )
 
+    # ----------------------------------------------
+    # MODEL PREDICTION
+    # ----------------------------------------------
+
     try:
 
-        # Apply the same scaler used during training.
-        scaled_input = scaler.transform(input_df)
+        with st.spinner(
+            "🧠 The neural network is analyzing student information..."
+        ):
 
-        # Predict final grade.
-        prediction = model.predict(
-            scaled_input,
-            verbose=0
-        )
+            scaled_data = scaler.transform(input_data)
 
-        predicted_grade = float(
-            np.asarray(prediction).reshape(-1)[0]
-        )
+            prediction = model.predict(
+                scaled_data,
+                verbose=0
+            )
 
-        # Clamp prediction to the valid UCI grade range.
-        predicted_grade = float(
-            np.clip(predicted_grade, 0, 20)
-        )
+            predicted_grade = float(
+                np.asarray(prediction).reshape(-1)[0]
+            )
+
+            predicted_grade = float(
+                np.clip(predicted_grade, 0, 20)
+            )
 
     except Exception as error:
 
-        st.error("Prediction करताना error आला.")
+        st.error("An error occurred during prediction.")
 
         st.code(str(error))
 
         st.stop()
 
-    # ======================================
-    # PERFORMANCE CLASSIFICATION
-    # ======================================
+    # ==============================================
+    # 10. PERFORMANCE CLASSIFICATION
+    # ==============================================
 
     if predicted_grade < 10:
 
         performance = "Needs Improvement"
         performance_emoji = "⚠️"
 
-        st.warning(
-            "विद्यार्थ्याला अतिरिक्त शैक्षणिक मदतीची गरज असू शकते."
+        performance_message = (
+            "The student may benefit from additional academic support."
         )
 
     elif predicted_grade < 15:
@@ -451,8 +532,8 @@ if submitted:
         performance = "Average Performance"
         performance_emoji = "📘"
 
-        st.info(
-            "विद्यार्थ्याची कामगिरी सुधारण्यासाठी नियमित प्रयत्न उपयुक्त ठरू शकतात."
+        performance_message = (
+            "Consistent study and revision may help improve performance."
         )
 
     else:
@@ -460,17 +541,20 @@ if submitted:
         performance = "Good Performance"
         performance_emoji = "🌟"
 
-        st.success(
-            "विद्यार्थ्याची अंदाजित कामगिरी चांगली आहे."
+        performance_message = (
+            "Continue maintaining consistent study habits."
         )
+
+    # ==============================================
+    # 11. DISPLAY PREDICTION RESULTS
+    # ==============================================
 
     st.divider()
 
-    # ======================================
-    # DISPLAY RESULTS
-    # ======================================
-
-    st.header("📊 Student Performance Result")
+    st.markdown(
+        '<div class="section-heading">📊 Prediction Results</div>',
+        unsafe_allow_html=True
+    )
 
     result_col1, result_col2 = st.columns(2)
 
@@ -478,11 +562,17 @@ if submitted:
 
         st.markdown(f"""
         <div class="result-card">
-            <div class="result-label">🎯 Predicted Final Grade</div>
+
+            <div class="result-label">
+                🎯 Predicted Final Grade
+            </div>
+
             <div class="result-number">
                 {predicted_grade:.2f} / 20
             </div>
-            <p>Neural Network Prediction</p>
+
+            <p>Estimated Final Grade</p>
+
         </div>
         """, unsafe_allow_html=True)
 
@@ -490,105 +580,149 @@ if submitted:
 
         st.markdown(f"""
         <div class="result-card">
-            <div class="result-label">📈 Performance Category</div>
+
+            <div class="result-label">
+                📈 Performance Category
+            </div>
+
             <div class="result-number">
                 {performance_emoji}
             </div>
+
             <h3>{performance}</h3>
+
+            <p>{performance_message}</p>
+
         </div>
         """, unsafe_allow_html=True)
 
-    # ======================================
-    # FEATURE-WISE IMPROVEMENT SUGGESTIONS
-    # ======================================
+    if predicted_grade < 10:
+        st.warning(
+            "This prediction indicates that additional academic "
+            "support may be helpful."
+        )
 
-    st.header("💡 Feature-wise Improvement Suggestions")
+    elif predicted_grade < 15:
+        st.info(
+            "There may be opportunities to strengthen academic performance."
+        )
+
+    else:
+        st.success(
+            "The predicted grade falls within the good-performance category."
+        )
+
+    # ==============================================
+    # 12. GRADE PROGRESS INDICATOR
+    # ==============================================
+
+    st.subheader("📊 Predicted Grade Indicator")
+
+    grade_percentage = int(
+        (predicted_grade / 20) * 100
+    )
+
+    st.progress(grade_percentage)
+
+    st.caption(
+        f"Predicted grade relative to the 20-point scale: "
+        f"{grade_percentage}%"
+    )
+
+    # ==============================================
+    # 13. FEATURE-WISE IMPROVEMENT SUGGESTIONS
+    # ==============================================
+
+    st.markdown(
+        '<div class="section-heading">💡 Improvement Suggestions</div>',
+        unsafe_allow_html=True
+    )
 
     suggestions = []
 
-    if studytime == 1:
+    if studytime <= 2:
 
-        suggestions.append(
-            "📚 **Study Time:** अभ्यासासाठी नियमित वेळ ठरवा. "
-            "दररोज छोट्या study sessions पासून सुरुवात करा."
-        )
-
-    elif studytime == 2:
-
-        suggestions.append(
-            "📚 **Study Time:** आठवड्याच्या अभ्यासाचे नियोजन करा "
-            "आणि कठीण विषयांसाठी अतिरिक्त वेळ द्या."
-        )
-
-    if absences >= 10:
-
-        suggestions.append(
-            "🏫 **Attendance:** गैरहजेरी जास्त आहे. "
-            "शक्य असल्यास वर्गांना नियमित उपस्थित राहा "
-            "आणि चुकलेला अभ्यास पूर्ण करा."
-        )
-
-    if failures >= 1:
-
-        suggestions.append(
-            "📖 **Past Failures:** मागील अडचणींचे विषय ओळखा. "
-            "शिक्षकांची मदत घ्या आणि त्या topics ची revision करा."
-        )
+        suggestions.append((
+            "📚 Study Time",
+            "Create a regular study timetable and practise consistently."
+        ))
 
     if G1 < 10:
 
-        suggestions.append(
-            "📘 **First Period Grade (G1):** पहिल्या period मधील "
-            "कमी गुण मिळालेल्या विषयांचा पुन्हा अभ्यास करा."
-        )
+        suggestions.append((
+            "📘 First Period Grade",
+            "Review difficult topics from the first grading period."
+        ))
 
     if G2 < 10:
 
-        suggestions.append(
-            "📗 **Second Period Grade (G2):** दुसऱ्या period मधील "
-            "कमकुवत topics वर लक्ष द्या आणि नियमित सराव करा."
-        )
+        suggestions.append((
+            "📗 Second Period Grade",
+            "Focus on topics that were difficult during the second period."
+        ))
 
     if G2 < G1:
 
-        suggestions.append(
-            "📉 **Academic Trend:** G2 हे G1 पेक्षा कमी आहे. "
-            "गुण कमी होण्याची संभाव्य कारणे शिक्षकांसोबत तपासा."
-        )
+        suggestions.append((
+            "📉 Academic Trend",
+            "The second-period grade is lower than the first. "
+            "Review possible reasons with a teacher."
+        ))
 
     elif G2 > G1:
 
-        suggestions.append(
-            "📈 **Academic Trend:** G2 मध्ये G1 पेक्षा सुधारणा दिसते. "
-            "अभ्यासाची चांगली सवय कायम ठेवा."
-        )
+        suggestions.append((
+            "📈 Academic Progress",
+            "The second-period grade is higher than the first. "
+            "Continue the study habits that may have helped."
+        ))
+
+    if absences >= 10:
+
+        suggestions.append((
+            "🏫 Attendance",
+            "Review the reasons for absences and work towards regular attendance."
+        ))
+
+    if failures > 0:
+
+        suggestions.append((
+            "👨‍🏫 Academic Support",
+            "Consider seeking additional guidance in difficult subjects."
+        ))
 
     if not suggestions:
 
-        suggestions.append(
-            "🌟 सध्याच्या inputs मध्ये ठळक warning दिसत नाही. "
-            "नियमित अभ्यास, उपस्थिती आणि revision सुरू ठेवा."
-        )
+        suggestions.append((
+            "🌟 Continue Learning",
+            "Maintain consistent study habits, attend classes, "
+            "and monitor academic progress."
+        ))
 
-    for suggestion in suggestions:
+    for title, description in suggestions:
 
         st.markdown(
-            f'<div class="tip-card">{suggestion}</div>',
+            f"""
+            <div class="suggestion-card">
+                <strong>{title}</strong><br>
+                {description}
+            </div>
+            """,
             unsafe_allow_html=True
         )
 
-    # ======================================
-    # INPUT SUMMARY
-    # ======================================
+    # ==============================================
+    # 14. STUDENT INFORMATION SUMMARY
+    # ==============================================
 
-    st.header("📋 Student Information Summary")
+    st.subheader("📋 Student Information Summary")
 
-    summary_df = pd.DataFrame({
+    summary_data = pd.DataFrame({
         "Feature": [
             "Student Age",
             "Weekly Study Time",
-            "Number of Absences",
             "Past Class Failures",
+            "Number of Absences",
             "First Period Grade (G1)",
             "Second Period Grade (G2)"
         ],
@@ -596,34 +730,39 @@ if submitted:
         "Value": [
             age,
             studytime_label,
-            absences,
             failures,
+            absences,
             G1,
             G2
         ]
     })
 
     st.dataframe(
-        summary_df,
+        summary_data,
         use_container_width=True,
         hide_index=True
     )
 
+    # ==============================================
+    # 15. DISCLAIMER
+    # ==============================================
+
     st.caption(
-        "टीप: Prediction हे dataset वर train केलेल्या model चा अंदाज आहे. "
-        "हे विद्यार्थ्याच्या भविष्यातील कामगिरीची हमी नाही. "
-        "Improvement suggestions या input-based rules आहेत."
+        "Note: The predicted grade is an estimate, not a guaranteed result. "
+        "Improvement suggestions are based on simple rules applied to "
+        "the entered information."
     )
 
 
-# ==========================================
-# FOOTER
-# ==========================================
+# ==================================================
+# 16. FOOTER
+# ==================================================
+
+st.divider()
 
 st.markdown("""
 <div class="footer">
-    🎓 Student Performance AI |
-    Multilayer Neural Network |
-    Academic Support System
+    🎓 Student Performance AI<br>
+    Built using Python, Streamlit and a Multilayer Neural Network
 </div>
 """, unsafe_allow_html=True)
