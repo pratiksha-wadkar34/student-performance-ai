@@ -141,12 +141,12 @@ div[data-testid="stMetric"] {
 
 @st.cache_resource
 def load_resources():
-    model = load_model("models/student_model.keras")
+    model = load_model("model = load_model("student_model.keras")")
 
-    with open("models/scaler.pkl", "rb") as f:
+    with open("scaler = joblib.load("scaler.pkl")", "rb") as f:
         scaler = pickle.load(f)
 
-    with open("models/features.pkl", "rb") as f:
+    with open("features = joblib.load("features.pkl")models/features.pkl", "rb") as f:
         features = pickle.load(f)
 
     return model, scaler, features
